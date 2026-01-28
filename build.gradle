@@ -1,0 +1,139 @@
+// ============================================
+// ROOT PROJECT - SHARED CONFIGURATION ONLY
+// ============================================
+// This is a multi-module Gradle project for Escala ERP.
+// The root project should NOT contain any source code (no src/ folder).
+// It only defines shared configuration, dependency versions, and common plugins
+// that will be inherited by all submodules (microservices and shared libraries).
+
+plugins {
+	id 'java'
+	// Apply Spring Boot plugin to subprojects only (not to root)
+	id 'org.springframework.boot' version '4.0.2' apply false
+	id 'io.spring.dependency-management' version '1.1.7' apply false
+}
+
+// ============================================
+// PROJECT METADATA
+// ============================================
+group = 'com.escala.erp'
+version = '1.0.0'
+description = 'A complete enterprise ERP system with a microservices architecture that integrates CRM, sales, marketing, accounting, inventory, purchasing, human resources, e-commerce, and real-time chat. It implements Clean Architecture, multi-tenancy, JWT-based security, and DDD patterns for scalable, end-to-end enterprise process management.'
+
+// ============================================
+// CENTRALIZED DEPENDENCY VERSIONS
+// ============================================
+// Define all dependency versions here to ensure consistency across all microservices.
+// This follows the DRY principle and makes version upgrades easier.
+ext {
+	springBootVersion = '4.0.2'
+	springCloudVersion = '2025.1.0'
+	javaVersion = '21'
+	lombokVersion = '1.18.42'
+	mapstructVersion = '1.5.5.Final'
+	jjwtVersion = '0.12.3'
+	flywayVersion = '10.4.1'
+	testcontainersVersion = '1.19.3'
+}
+
+// ============================================
+// CONFIGURATION FOR ALL PROJECTS
+// ============================================
+// This configuration applies to the root project AND all subprojects.
+allprojects {
+	// Inherit group from root
+	group = rootProject.group
+	version = rootProject.version
+
+	// Maven Central repository for all dependency resolution
+	repositories {
+		mavenCentral()
+	}
+}
+
+// ============================================
+// CONFIGURATION FOR SUBPROJECTS ONLY
+// ============================================
+// This configuration applies ONLY to subprojects (microservices and shared libraries).
+// The root project itself will not have these plugins or dependencies.
+subprojects {
+	// Apply Java plugin to all submodules
+	apply plugin: 'java'
+	// Apply Spring dependency management (without Spring Boot by default)
+	apply plugin: 'io.spring.dependency-management'
+
+	// ============================================
+	// JAVA TOOLCHAIN CONFIGURATION
+	// ============================================
+	// Use Java 21 for all modules.
+	// Toolchain ensures consistent JDK version across all environments.
+	java {
+		toolchain {
+			languageVersion = JavaLanguageVersion.of(21)
+		}
+	}
+
+	// ============================================
+	// GRADLE CONFIGURATIONS
+	// ============================================
+	// Extend annotationProcessor configuration to include compileOnly dependencies.
+	// This is required for Lombok and MapStruct to work correctly.
+	configurations {
+		compileOnly {
+			extendsFrom annotationProcessor
+		}
+	}
+
+	// ============================================
+	// DEPENDENCY MANAGEMENT (BOM)
+	// ============================================
+	// Import Spring Cloud BOM to manage transitive dependency versions.
+	// This ensures compatible versions of all Spring Cloud components.
+	dependencyManagement {
+		imports {
+			mavenBom "org.springframework.cloud:spring-cloud-dependencies:2025.1.0"
+		}
+	}
+
+	// ============================================
+	// COMMON DEPENDENCIES FOR ALL MODULES
+	// ============================================
+	// These dependencies are included in EVERY subproject by default.
+	dependencies {
+		// Lombok - Reduces boilerplate code (getters, setters, constructors, etc.)
+		compileOnly "org.projectlombok:lombok:1.18.42"
+		annotationProcessor "org.projectlombok:lombok:1.18.42"
+
+		// Testing dependencies
+		testImplementation 'org.springframework.boot:spring-boot-starter-test'
+		testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+		// AssertJ for fluent assertions in tests
+		testImplementation 'org.assertj:assertj-core'
+	}
+
+	// ============================================
+	// COMPILER CONFIGURATION
+	// ============================================
+	// Configure Java compiler options
+	tasks.withType(JavaCompile).configureEach {
+		options.encoding = 'UTF-8'
+		options.compilerArgs += ['-parameters']
+	}
+	// ============================================
+	// TEST CONFIGURATION
+	// ============================================
+	// Use JUnit Platform (JUnit 5) for all tests
+	tasks.named('test') {
+		useJUnitPlatform()
+
+		// Test execution configuration
+		testLogging {
+			events "passed", "skipped", "failed"
+			exceptionFormat "full"
+		}
+
+		// Increase max heap size for tests if needed
+		maxHeapSize = '1G'
+	}
+}
