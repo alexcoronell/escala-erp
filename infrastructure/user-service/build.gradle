@@ -1,0 +1,124 @@
+// ============================================
+// USER-SERVICE - BUILD CONFIGURATION
+// ============================================
+// User management service for Escala ERP
+// Handles users, roles, permissions, and tenant management
+
+plugins {
+	id 'java'
+	id 'org.springframework.boot'
+	id 'io.spring.dependency-management'
+}
+
+// ============================================
+// PROJECT METADATA
+// ============================================
+group = 'com.escala.erp'
+version = '1.0.0'
+description = 'User Management Service for Escala ERP'
+
+// ============================================
+// JAVA CONFIGURATION
+// ============================================
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+// ============================================
+// GRADLE CONFIGURATIONS
+// ============================================
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+// ============================================
+// DEPENDENCY VERSIONS
+// ============================================
+ext {
+	set('springCloudVersion', "2025.1.0")
+}
+
+// ============================================
+// DEPENDENCIES
+// ============================================
+dependencies {
+	// ===== WEB LAYER =====
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// ===== SECURITY =====
+	// Spring Security 7.0.2 (comes with Spring Boot 4.0.2)
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// ===== DATABASE =====
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'org.postgresql:postgresql'
+
+	// Database migration
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+
+	// ===== CACHING =====
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// ===== SERVICE DISCOVERY =====
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+	// ===== REST CLIENT =====
+	// OpenFeign for calling auth-service and other services
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+	// ===== VALIDATION =====
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// ===== MONITORING =====
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// ===== UTILITIES =====
+	// Lombok for reducing boilerplate code
+	compileOnly 'org.projectlombok:lombok:1.18.42'
+	annotationProcessor 'org.projectlombok:lombok:1.18.42'
+
+	// ===== TESTING =====
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// ============================================
+// DEPENDENCY MANAGEMENT
+// ============================================
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+// ============================================
+// TASKS CONFIGURATION
+// ============================================
+// Enable bootJar for Spring Boot application
+tasks.named('bootJar') {
+	enabled = true
+}
+
+// Disable plain jar since we want the fat jar
+tasks.named('jar') {
+	enabled = false
+}
+
+
+// ============================================
+// TEST CONFIGURATION
+// ============================================
+/*
+tasks.named('test') {
+	useJUnitPlatform()
+}*/

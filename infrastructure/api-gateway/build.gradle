@@ -1,0 +1,110 @@
+// ============================================
+// API-GATEWAY - BUILD CONFIGURATION
+// ============================================
+// API Gateway for Escala ERP
+// Single entry point for all microservices with routing, security, and resilience
+
+plugins {
+	id 'java'
+	id 'org.springframework.boot'
+	id 'io.spring.dependency-management'
+}
+
+// ============================================
+// PROJECT METADATA
+// ============================================
+group = 'com.escala.erp'
+version = '1.0.0'
+description = 'API Gateway for Escala ERP'
+
+// ============================================
+// JAVA CONFIGURATION
+// ============================================
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+// ============================================
+// GRADLE CONFIGURATIONS
+// ============================================
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+// ============================================
+// DEPENDENCY VERSIONS
+// ============================================
+ext {
+	set('springCloudVersion', "2025.1.0")
+}
+
+// ============================================
+// DEPENDENCIES
+// ============================================
+dependencies {
+	// ===== API GATEWAY (REACTIVE) =====
+	// Spring Cloud Gateway runs on WebFlux (reactive)
+	implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc'
+
+	// ===== SERVICE DISCOVERY =====
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+	// ===== RESILIENCE =====
+	// Circuit Breaker, Retry, Rate Limiter, Bulkhead
+	implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j'
+
+	// ===== CACHING & SESSION (REACTIVE) =====
+	// Reactive Redis for rate limiting and caching
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
+
+	// ===== MONITORING =====
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// ===== UTILITIES =====
+	// Lombok for reducing boilerplate code
+	compileOnly 'org.projectlombok:lombok:1.18.42'
+	annotationProcessor 'org.projectlombok:lombok:1.18.42'
+
+	// ===== TESTING =====
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	// Reactor test for testing reactive flows
+	testImplementation 'io.projectreactor:reactor-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// ============================================
+// DEPENDENCY MANAGEMENT
+// ============================================
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+// ============================================
+// ROOT PROJECT - DISABLE JAR GENERATION
+// ============================================
+// Root project has no source code, so disable jar/bootJar tasks
+tasks.named('bootJar') {
+	enabled = true
+}
+
+// Disable plain jar since we want the fat jar
+tasks.named('jar') {
+	enabled = false
+}
+
+// ============================================
+// TEST CONFIGURATION
+// ============================================
+tasks.named('test') {
+	useJUnitPlatform()
+}

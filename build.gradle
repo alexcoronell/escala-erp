@@ -8,7 +8,6 @@
 
 plugins {
 	id 'java'
-	// Apply Spring Boot plugin to subprojects only (not to root)
 	id 'org.springframework.boot' version '4.0.2' apply false
 	id 'io.spring.dependency-management' version '1.1.7' apply false
 }
@@ -41,11 +40,9 @@ ext {
 // ============================================
 // This configuration applies to the root project AND all subprojects.
 allprojects {
-	// Inherit group from root
-	group = rootProject.group
-	version = rootProject.version
+	group = 'com.escala.erp'
+	version = '1.0.0'
 
-	// Maven Central repository for all dependency resolution
 	repositories {
 		mavenCentral()
 	}
@@ -57,9 +54,14 @@ allprojects {
 // This configuration applies ONLY to subprojects (microservices and shared libraries).
 // The root project itself will not have these plugins or dependencies.
 subprojects {
-	// Apply Java plugin to all submodules
+
+	// Skip the infrastructure container project
+	if (project.name == 'infrastructure') {
+		return
+	}
+
 	apply plugin: 'java'
-	// Apply Spring dependency management (without Spring Boot by default)
+	apply plugin: 'org.springframework.boot'
 	apply plugin: 'io.spring.dependency-management'
 
 	// ============================================
@@ -91,7 +93,7 @@ subprojects {
 	// This ensures compatible versions of all Spring Cloud components.
 	dependencyManagement {
 		imports {
-			mavenBom "org.springframework.cloud:spring-cloud-dependencies:2025.1.0"
+			mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
 		}
 	}
 
@@ -101,8 +103,8 @@ subprojects {
 	// These dependencies are included in EVERY subproject by default.
 	dependencies {
 		// Lombok - Reduces boilerplate code (getters, setters, constructors, etc.)
-		compileOnly "org.projectlombok:lombok:1.18.42"
-		annotationProcessor "org.projectlombok:lombok:1.18.42"
+		compileOnly "org.projectlombok:lombok:${lombokVersion}"
+		annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
 		// Testing dependencies
 		testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -115,11 +117,13 @@ subprojects {
 	// ============================================
 	// COMPILER CONFIGURATION
 	// ============================================
-	// Configure Java compiler options
+	// Configure Java compiler options with lazy configuration for better performance
 	tasks.withType(JavaCompile).configureEach {
 		options.encoding = 'UTF-8'
+		// Enable parameter name preservation for better reflection support
 		options.compilerArgs += ['-parameters']
 	}
+
 	// ============================================
 	// TEST CONFIGURATION
 	// ============================================
@@ -130,10 +134,18 @@ subprojects {
 		// Test execution configuration
 		testLogging {
 			events "passed", "skipped", "failed"
-			exceptionFormat "full"
+			exceptionFormat = "full"
 		}
 
 		// Increase max heap size for tests if needed
 		maxHeapSize = '1G'
 	}
+}
+
+// ============================================
+// ROOT PROJECT - DISABLE JAR GENERATION
+// ============================================
+// Root project has no source code, so disable jar task
+tasks.named('jar') {
+	enabled = false
 }

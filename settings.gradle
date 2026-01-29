@@ -1,1 +1,38 @@
 rootProject.name = 'escala-erp'
+rootProject.name = 'escala-erp'
+
+// ============================================
+// PHASE 1: INFRASTRUCTURE SERVICES
+// ============================================
+// Core infrastructure for microservices architecture
+include 'infrastructure:service-registry'
+include 'infrastructure:config-server'
+include 'infrastructure:api-gateway'
+include 'infrastructure:auth-service'
+include 'infrastructure:user-service'
+
+// ============================================
+// PHASE 2+: BUSINESS SERVICES (To be added)
+// ============================================
+// include 'business-services:crm-service'
+// include 'business-services:sales-service'
+// include 'business-services:marketing-service'
+// include 'business-services:accounting-service'
+// include 'business-services:inventory-service'
+// include 'business-services:purchase-service'
+// include 'business-services:hr-service'
+// include 'business-services:ecommerce-service'
+// include 'business-services:chat-service'
+
+// ============================================
+// PHASE 3+: SUPPORT SERVICES (To be added)
+// ============================================
+// include 'support-services:notification-service'
+// include 'support-services:file-service'
+// include 'support-services:report-service'
+
+// ============================================
+// SHARED LIBRARIES (Create on demand)
+// ============================================
+// include 'shared:common-lib'
+// include 'shared:security-lib'

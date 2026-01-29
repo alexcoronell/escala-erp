@@ -1,0 +1,96 @@
+// ============================================
+// CONFIG-SERVER - BUILD CONFIGURATION
+// ============================================
+// Centralized configuration server for Escala ERP
+// Manages application configurations for all microservices
+
+plugins {
+	id 'java'
+	id 'org.springframework.boot'
+	id 'io.spring.dependency-management'
+}
+
+// ============================================
+// PROJECT METADATA
+// ============================================
+group = 'com.escala.erp'
+version = '1.0.0'
+description = 'Configuration Server for Escala ERP'
+
+// ============================================
+// JAVA CONFIGURATION
+// ============================================
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+// ============================================
+// GRADLE CONFIGURATIONS
+// ============================================
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+// ============================================
+// DEPENDENCY VERSIONS
+// ============================================
+ext {
+	set('springCloudVersion', "2025.1.0")
+}
+
+// ============================================
+// DEPENDENCIES
+// ============================================
+dependencies {
+	// ===== CONFIG SERVER =====
+	implementation 'org.springframework.cloud:spring-cloud-config-server'
+
+	// ===== MONITORING =====
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// ===== UTILITIES =====
+	// Lombok for reducing boilerplate code (minimal usage in config-server)
+	compileOnly 'org.projectlombok:lombok:1.18.42'
+	annotationProcessor 'org.projectlombok:lombok:1.18.42'
+
+	// ===== TESTING =====
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// ============================================
+// DEPENDENCY MANAGEMENT
+// ============================================
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+// ============================================
+// TASKS CONFIGURATION
+// ============================================
+// Enable bootJar for Spring Boot application
+tasks.named('bootJar') {
+	enabled = true
+}
+
+// Disable plain jar since we want the fat jar
+tasks.named('jar') {
+	enabled = false
+}
+
+// ============================================
+// TEST CONFIGURATION
+// ============================================
+tasks.named('test') {
+	useJUnitPlatform()
+}

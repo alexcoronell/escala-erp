@@ -1,0 +1,9 @@
+// ============================================
+// INFRASTRUCTURE - CONTAINER PROJECT
+// ============================================
+// This is a container project for infrastructure services.
+// It should NOT be treated as a Spring Boot application.
+// It only serves as an organizational structure.
+
+// No plugins applied - this is just a container
+// The subprojects will have their own build.gradle files with Spring Boot configuration
