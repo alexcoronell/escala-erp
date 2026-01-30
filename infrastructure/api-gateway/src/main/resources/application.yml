@@ -1,0 +1,186 @@
+# ============================================
+# API-GATEWAY CONFIGURATION
+# ============================================
+# Single entry point for all microservices in Escala ERP.
+# Handles routing, load balancing, security, and resilience.
+
+# ============================================
+# SERVER CONFIGURATION
+# ============================================
+server:
+  port: 8080
+
+# ============================================
+# SPRING APPLICATION CONFIGURATION
+# ============================================
+spring:
+  application:
+    name: api-gateway
+
+  # ============================================
+  # CLOUD CONFIG CLIENT
+  # ============================================
+  config:
+    import: optional:configserver:http://localhost:8888
+
+  # ============================================
+  # CLOUD GATEWAY CONFIGURATION
+  # ============================================
+  cloud:
+    gateway:
+      # ===== GLOBAL CORS CONFIGURATION =====
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origins: "*"
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowed-headers: "*"
+            allow-credentials: false
+
+      # ===== DISCOVERY LOCATOR =====
+      # Enable automatic route creation based on service registry
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      # ===== ROUTE DEFINITIONS =====
+      mvc:
+        routes:
+          # ===== AUTH SERVICE ROUTES =====
+          - id: auth-service
+            uri: lb://auth-service
+            predicates:
+              - Path=/api/auth/**
+            filters:
+              - RewritePath=/api/auth/(?<segment>.*), /${segment}
+              - name: CircuitBreaker
+                args:
+                  name: authServiceCB
+                  fallbackUri: forward:/fallback/auth
+
+          # ===== USER SERVICE ROUTES =====
+          - id: user-service
+            uri: lb://user-service
+            predicates:
+              - Path=/api/users/**
+            filters:
+              - RewritePath=/api/users/(?<segment>.*), /${segment}
+              - name: CircuitBreaker
+                args:
+                  name: userServiceCB
+                  fallbackUri: forward:/fallback/users
+
+          # ===== CRM SERVICE ROUTES (Future) =====
+          - id: crm-service
+            uri: lb://crm-service
+            predicates:
+              - Path=/api/crm/**
+            filters:
+              - RewritePath=/api/crm/(?<segment>.*), /${segment}
+              - name: CircuitBreaker
+                args:
+                  name: crmServiceCB
+                  fallbackUri: forward:/fallback/crm
+
+# ============================================
+# EUREKA CLIENT CONFIGURATION
+# ============================================
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# ============================================
+# RESILIENCE4J CONFIGURATION
+# ============================================
+resilience4j:
+  # ===== CIRCUIT BREAKER =====
+  circuitbreaker:
+    configs:
+      default:
+        # Number of calls to measure
+        sliding-window-size: 10
+        # Minimum number of calls before circuit breaker can trip
+        minimum-number-of-calls: 5
+        # Failure rate threshold (percentage)
+        failure-rate-threshold: 50
+        # Time circuit stays open before half-open
+        wait-duration-in-open-state: 10s
+        # Number of calls in half-open state
+        permitted-number-of-calls-in-half-open-state: 3
+        # Automatically transition from open to half-open
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      authServiceCB:
+        base-config: default
+      userServiceCB:
+        base-config: default
+      crmServiceCB:
+        base-config: default
+
+  # ===== RETRY =====
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+    instances:
+      authServiceRetry:
+        base-config: default
+      userServiceRetry:
+        base-config: default
+
+  # ===== RATE LIMITER =====
+  ratelimiter:
+    configs:
+      default:
+        # Number of permissions available per refresh period
+        limit-for-period: 100
+        # Duration of the refresh period
+        limit-refresh-period: 1s
+        # Time a thread waits for permission
+        timeout-duration: 0s
+
+# ============================================
+# ACTUATOR CONFIGURATION
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+# ============================================
+# LOGGING CONFIGURATION
+# ============================================
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web: DEBUG
+    com.escala.erp: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

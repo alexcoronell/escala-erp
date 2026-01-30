@@ -21,7 +21,7 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 
  * @author Alex Coronell
  * @version 1.0.0
- * @since 2024-01-28
+ * @since 2026-01-15
  */
 @SpringBootApplication
 @EnableEurekaServer
