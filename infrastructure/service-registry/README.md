@@ -217,4 +217,4 @@ After Service Registry is running:
 
 ## Support
 
-For issues or questions, contact the Escala ERP Team.
+For issues or questions, contact the Alex Coronell.

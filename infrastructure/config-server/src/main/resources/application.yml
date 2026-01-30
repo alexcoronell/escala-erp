@@ -1,0 +1,91 @@
+# ============================================
+# CONFIG-SERVER CONFIGURATION
+# ============================================
+# Centralized configuration server for Escala ERP microservices.
+# Manages application configurations for all services from a central repository.
+
+# ============================================
+# SERVER CONFIGURATION
+# ============================================
+server:
+  port: 8888
+
+# ============================================
+# SPRING APPLICATION CONFIGURATION
+# ============================================
+spring:
+  application:
+    name: config-server
+
+  # ============================================
+  # CLOUD CONFIG SERVER CONFIGURATION
+  # ============================================
+  cloud:
+    config:
+      server:
+        # Native profile - reads configs from classpath or filesystem
+        native:
+          # Search locations for configuration files
+          search-locations: classpath:/configs/
+        # Use native profile (filesystem/classpath)
+        # Alternative: git (for production, use Git repository)
+        default-label: main
+
+  # ============================================
+  # PROFILES CONFIGURATION
+  # ============================================
+  profiles:
+    # Active profile: native (reads from filesystem/classpath)
+    # For production, change to 'git' and configure Git repository
+    active: native
+
+# ============================================
+# EUREKA CLIENT CONFIGURATION
+# ============================================
+# Config Server registers with Service Registry
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    # Fetch registry to discover other services
+    fetch-registry: true
+    # Register this service with Eureka
+    register-with-eureka: true
+  instance:
+    # Prefer IP address over hostname
+    prefer-ip-address: true
+    # Instance ID format
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    # Lease renewal interval (heartbeat)
+    lease-renewal-interval-in-seconds: 30
+    # Lease expiration duration
+    lease-expiration-duration-in-seconds: 90
+
+# ============================================
+# ACTUATOR CONFIGURATION
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        # Expose health, info, and refresh endpoints
+        include: health,info,refresh,env,configprops
+  endpoint:
+    health:
+      show-details: always
+
+# ============================================
+# LOGGING CONFIGURATION
+# ============================================
+logging:
+  level:
+    # Root level
+    root: INFO
+    # Config Server logs
+    org.springframework.cloud.config: DEBUG
+    org.springframework.web: DEBUG
+    # Application logs
+    com.escala.erp: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

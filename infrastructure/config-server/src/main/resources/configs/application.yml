@@ -1,0 +1,46 @@
+# ============================================
+# SHARED CONFIGURATION FOR ALL SERVICES
+# ============================================
+# This configuration is applied to ALL microservices in Escala ERP.
+# Service-specific configurations override these values.
+
+# ============================================
+# EUREKA CLIENT CONFIGURATION (SHARED)
+# ============================================
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+# ============================================
+# ACTUATOR CONFIGURATION (SHARED)
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# ============================================
+# LOGGING CONFIGURATION (SHARED)
+# ============================================
+logging:
+  level:
+    root: INFO
+    com.escala.erp: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
