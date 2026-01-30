@@ -1,0 +1,73 @@
+# ============================================
+# SERVICE-REGISTRY (EUREKA SERVER) CONFIGURATION
+# ============================================
+# This is the service discovery server for Escala ERP.
+# All microservices will register here to enable service-to-service communication.
+
+# ============================================
+# SERVER CONFIGURATION
+# ============================================
+server:
+  port: 8761
+
+# ============================================
+# SPRING APPLICATION CONFIGURATION
+# ============================================
+spring:
+  application:
+    name: service-registry
+
+# ============================================
+# EUREKA SERVER CONFIGURATION
+# ============================================
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: false
+
+  client:
+    # This server should NOT register itself as a client
+    register-with-eureka: false
+    # This server should NOT fetch registry from other Eureka servers
+    fetch-registry: false
+    service-url:
+      # URL where other services will register
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+
+  server:
+    # Disable self-preservation mode in development
+    # In production, set this to true
+    enable-self-preservation: false
+    # How often to check for expired clients (milliseconds)
+    eviction-interval-timer-in-ms: 10000
+    # Response cache update interval
+    response-cache-update-interval-ms: 5000
+
+# ============================================
+# ACTUATOR CONFIGURATION
+# ============================================
+management:
+  endpoints:
+    web:
+      exposure:
+        # Expose health and info endpoints
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# ============================================
+# LOGGING CONFIGURATION
+# ============================================
+logging:
+  level:
+    # Root level
+    root: INFO
+    # Eureka logs
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+    # Application logs
+    com.escala.erp: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
