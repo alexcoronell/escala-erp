@@ -1,0 +1,145 @@
+
+# ============================================
+# DOCKER COMPOSE - ESCALA ERP
+# ============================================
+# Infrastructure services for local development and testing
+# Includes PostgreSQL, Redis, and PgAdmin
+#
+# Author: Alex Coronell
+# Date: 2024-01-28
+# Version: 1.0.0
+
+version: '3.8'
+
+services:
+  # ============================================
+  # POSTGRESQL - Main Database
+  # ============================================
+  postgres:
+    image: postgres:16
+    container_name: escala-erp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: escala_erp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persistent data storage
+      - postgres_data:/var/lib/postgresql/data
+      # Initialization scripts (creates schemas)
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - escala-erp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d escala_erp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ============================================
+  # POSTGRESQL - Test Database (E2E)
+  # ============================================
+  postgres-test:
+    image: postgres:16
+    container_name: escala-erp-postgres-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: escala_erp_test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test123
+    ports:
+      - "5433:5432"
+    networks:
+      - escala-erp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d escala_erp_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ============================================
+  # REDIS - Caching and Session Storage
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: escala-erp-redis
+    restart: unless-stopped
+    command: redis-server --requirepass redis123 --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - escala-erp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # ============================================
+  # PGADMIN - PostgreSQL Management UI
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: escala-erp-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@escala-erp.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      # Pre-configured servers
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
+    networks:
+      - escala-erp-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ============================================
+  # REDIS COMMANDER - Redis Management UI
+  # ============================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: escala-erp-redis-commander
+    restart: unless-stopped
+    environment:
+      REDIS_HOSTS: local:redis:6379:0:redis123
+    ports:
+      - "8081:8081"
+    networks:
+      - escala-erp-network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+# ============================================
+# VOLUMES - Persistent Storage
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
+    name: escala-erp-postgres-data
+  redis_data:
+    driver: local
+    name: escala-erp-redis-data
+  pgadmin_data:
+    driver: local
+    name: escala-erp-pgadmin-data
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  escala-erp-network:
+    driver: bridge
+    name: escala-erp-network
