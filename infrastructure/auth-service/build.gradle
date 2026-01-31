@@ -2,7 +2,7 @@
 // AUTH-SERVICE - BUILD CONFIGURATION
 // ============================================
 // Authentication and authorization service for Escala ERP
-// Handles JWT token generation, OAuth2, user authentication
+// Handles user authentication, JWT tokens, and OAuth2 integration
 
 plugins {
 	id 'java'
@@ -15,7 +15,7 @@ plugins {
 // ============================================
 group = 'com.escala.erp'
 version = '1.0.0'
-description = 'Authentication Service for Escala ERP'
+description = 'Authentication and Authorization Service for Escala ERP'
 
 // ============================================
 // JAVA CONFIGURATION
@@ -54,17 +54,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
 	// ===== SECURITY =====
-	// Spring Security 7.0.2 (comes with Spring Boot 4.0.2)
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+	// JWT support
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
 	// ===== DATABASE =====
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	runtimeOnly 'org.postgresql:postgresql'
-
-	// Database migration
-	implementation 'org.springframework.boot:spring-boot-starter-flyway'
-	implementation 'org.flywaydb:flyway-database-postgresql'
 
 	// ===== CACHING =====
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -73,8 +72,10 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
 	// ===== REST CLIENT =====
-	// OpenFeign for inter-service communication (if needed)
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+	// ===== CONFIG SERVER CLIENT =====
+	implementation 'org.springframework.cloud:spring-cloud-starter-config'
 
 	// ===== VALIDATION =====
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -83,7 +84,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
 	// ===== UTILITIES =====
-	// Lombok for reducing boilerplate code
 	compileOnly 'org.projectlombok:lombok:1.18.42'
 	annotationProcessor 'org.projectlombok:lombok:1.18.42'
 
@@ -91,6 +91,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testRuntimeOnly 'com.h2database:h2'
 }
 
 // ============================================
@@ -109,15 +110,10 @@ tasks.named('bootJar') {
 	enabled = true
 }
 
-// Disable plain jar since we want the fat jar
 tasks.named('jar') {
 	enabled = false
 }
 
-// ============================================
-// TEST CONFIGURATION
-// ============================================
-/*
 tasks.named('test') {
 	useJUnitPlatform()
-}*/
+}
